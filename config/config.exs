@@ -13,7 +13,11 @@ config :pragstudio_liveview_studio,
 # Configures the endpoint
 config :pragstudio_liveview_studio, PragstudioLiveviewStudioWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: PragstudioLiveviewStudioWeb.ErrorView, accepts: ~w(html json), layout: false],
+  render_errors: [
+    view: PragstudioLiveviewStudioWeb.ErrorView,
+    accepts: ~w(html json),
+    layout: false
+  ],
   pubsub_server: PragstudioLiveviewStudio.PubSub,
   live_view: [signing_salt: "n8V7J5op"]
 
@@ -24,7 +28,8 @@ config :pragstudio_liveview_studio, PragstudioLiveviewStudioWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :pragstudio_liveview_studio, PragstudioLiveviewStudio.Mailer, adapter: Swoosh.Adapters.Local
+config :pragstudio_liveview_studio, PragstudioLiveviewStudio.Mailer,
+  adapter: Swoosh.Adapters.Local
 
 # Swoosh API client is needed for adapters other than SMTP.
 config :swoosh, :api_client, false
@@ -46,6 +51,18 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# Tailwind configuration
+config :tailwind,
+  version: "3.0.10",
+  default: [
+    args: ~w(
+      --config=tailwind.config.js
+      --input=css/app.css
+      --output=../priv/static/assets/app.css
+    ),
+    cd: Path.expand("../assets", __DIR__)
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

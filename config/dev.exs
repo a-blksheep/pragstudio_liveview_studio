@@ -25,7 +25,8 @@ config :pragstudio_liveview_studio, PragstudioLiveviewStudioWeb.Endpoint,
   secret_key_base: "qIuxWugFB9OgLM2tHRSyYqSli+UUhHYeWMu/5oq0W3Ou0LHbSpPEFgvg4gEeAhVX",
   watchers: [
     # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
 
 # ## SSL Support
