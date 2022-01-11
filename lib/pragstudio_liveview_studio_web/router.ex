@@ -17,7 +17,8 @@ defmodule PragstudioLiveviewStudioWeb.Router do
   scope "/", PragstudioLiveviewStudioWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    live "/", PageLive
+    live "/light", LightLive
   end
 
   # Other scopes may use custom stacks.

@@ -50,8 +50,7 @@ defmodule PragstudioLiveviewStudio.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:faker, "~> 0.17.0"},
-      {:number, "~> 1.0"},
-      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev}
+      {:number, "~> 1.0"}
     ]
   end
 
@@ -67,7 +66,11 @@ defmodule PragstudioLiveviewStudio.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
+      "assets.deploy": [
+        "cmd --cd assets npm run deploy",
+        "esbuild default --minify",
+        "phx.digest"
+      ]
     ]
   end
 end
