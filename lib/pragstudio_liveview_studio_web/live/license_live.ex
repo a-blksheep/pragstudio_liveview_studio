@@ -10,10 +10,17 @@ defmodule PragstudioLiveviewStudioWeb.LicenseLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    if connected?(socket), do: :timer.send_interval(1000, self(), :tick)
+
+    expiration_time = Timex.shift(Timex.now(), hours: 1)
+    time_remaining = time_remaining(expiration_time)
+
     socket =
       socket
       |> assign(amount: Licenses.calculate(2))
+      |> assign(expiration_time: expiration_time)
       |> assign(seats: 2)
+      |> assign(time_remaining: time_remaining)
 
     {:ok, socket}
   end
@@ -23,6 +30,13 @@ defmodule PragstudioLiveviewStudioWeb.LicenseLive do
     ~H"""
     <h1>Team License</h1>
     <div id="license">
+      <p class="m-4 font-semibold text-indigo-800">
+        <%= if @time_remaining > 0 do %>
+          <%= format_time(@time_remaining) %> left to save 20%
+        <% else %>
+          Expired!
+        <% end %>
+      </p>
       <div class="card">
         <div class="content">
           <div class="seats">
@@ -54,5 +68,28 @@ defmodule PragstudioLiveviewStudioWeb.LicenseLive do
       |> assign(seats: seats)
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(:tick, socket) do
+    time_remaining =
+      socket.assigns.expiration_time
+      |> time_remaining()
+
+    socket =
+      socket
+      |> assign(time_remaining: time_remaining)
+
+    {:noreply, socket}
+  end
+
+  defp time_remaining(expiration_time) do
+    DateTime.diff(expiration_time, Timex.now())
+  end
+
+  defp format_time(time) do
+    time
+    |> Timex.Duration.from_seconds()
+    |> Timex.format_duration(:humanized)
   end
 end
