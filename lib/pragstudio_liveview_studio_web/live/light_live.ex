@@ -25,54 +25,20 @@ defmodule PragstudioLiveviewStudioWeb.LightLive do
         </span>
       </div>
 
-
-      <button phx-click="off">
-        <img src="assets/images/light-off.svg" />
-      </button>
-
-      <button phx-click="down">
-        <img src="assets/images/down.svg" />
-      </button>
-
-      <button phx-click="up">
-        <img src="assets/images/up.svg" />
-      </button>
-
-      <button phx-click="on">
-        <img src="assets/images/light-on.svg" />
-      </button>
+      <form phx-change="update">
+        <input type="range" min="0" max="100" name="brightness" value={@brightness}/>
+      </form>
     </div>
     """
   end
 
   @impl true
-  def handle_event("off", _, socket) do
-    socket =
-      socket
-      |> assign(brightness: 0)
+  def handle_event("update", %{"brightness" => brightness}, socket) do
+    brightness =
+      brightness
+      |> String.to_integer()
 
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("on", _, socket) do
-    socket =
-      socket
-      |> assign(brightness: 100)
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("down", _, socket) do
-    socket = update(socket, :brightness, &max(&1 - 10, 0))
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("up", _, socket) do
-    socket = update(socket, :brightness, &min(&1 + 10, 100))
+    socket = socket |> assign(brightness: brightness)
 
     {:noreply, socket}
   end
