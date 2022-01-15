@@ -104,6 +104,7 @@ defmodule PragstudioLiveviewStudioWeb.SearchLive do
       stores ->
         socket =
           socket
+          |> clear_flash()
           |> assign(stores: stores)
           |> assign(loading: false)
 
