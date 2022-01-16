@@ -1,0 +1,182 @@
+defmodule PragstudioLiveviewStudioWeb.AutocompleteLive do
+  @moduledoc """
+  Documentation for `PragstudioLiveviewStudioWeb.AutocompleteLive`.
+  """
+
+  use PragstudioLiveviewStudioWeb, :live_view
+
+  alias PragstudioLiveviewStudio.Cities
+  alias PragstudioLiveviewStudio.Stores
+
+  @impl true
+  def mount(_params, _session, socket) do
+    socket =
+      socket
+      |> assign(zip: "")
+      |> assign(city: "")
+      |> assign(stores: [])
+      |> assign(matches: [])
+      |> assign(loading: false)
+
+    {:ok, socket}
+  end
+
+  @impl true
+  def render(assigns) do
+    ~H"""
+    <h1>Find a Store</h1>
+    <div id="search">
+      <form phx-submit="zip-search">
+
+        <input type="text" name="zip"
+        value={@zip} placeholder="Zip code"
+        autofocus autocomplete="off"
+        readonly={@loading} />
+
+        <button type="submit">
+          <img src="assets/images/search.svg" />
+        </button>
+
+      </form>
+
+      <form phx-submit="city-search" phx-change="suggest-city">
+
+        <input type="text" name="city"
+            value={@city} placeholder="City"
+            autocomplete="off"
+            readonly={@loading}
+            list="matches"
+            phx-debounce="1000"/>
+
+        <button type="submit">
+          <img src="assets/images/search.svg" />
+        </button>
+
+      </form>
+
+      <datalist id="matches">
+        <%= for match <- @matches do %>
+        <option value={match}><%= match %></option>
+        <% end %>
+      </datalist>
+
+      <%= if @loading do %>
+      <div class="loader">
+        Loading...
+      </div>
+      <% end %>
+    </div>
+    <div id="search">
+        <div class="stores">
+            <ul>
+            <%= for store <- @stores do %>
+                <li>
+                    <div class="first-line">
+                        <div class="name">
+                            <%= store.name %>
+                        </div>
+                        <div class="status">
+                        <%= if store.open do %>
+                            <span class="open">Open</span>
+                        <% else %>
+                            <span class="closed">Closed</span>
+                        <% end %>
+                        </div>
+                    </div>
+                    <div class="second-line">
+                        <div class="street">
+                            <img src="assets/images/location.svg">
+                            <%= store.street %>
+                        </div>
+                        <div class="phone_number">
+                            <img src="assets/images/phone.svg">
+                            <%= store.phone_number %>
+                        </div>
+                   </div>
+               </li>
+          <% end %>
+          </ul>
+       </div>
+    </div>
+    """
+  end
+
+  @impl true
+  def handle_event("city-search", %{"city" => city}, socket) do
+    send(self(), {:run_city_search, city})
+
+    socket =
+      socket
+      |> assign(stores: [])
+      |> assign(loading: true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("zip-search", %{"zip" => zip}, socket) do
+    send(self(), {:run_zip_search, zip})
+
+    socket =
+      socket
+      |> assign(stores: [])
+      |> assign(loading: true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("suggest-city", %{"city" => prefix}, socket) do
+    socket =
+      socket
+      |> assign(matches: Cities.suggest(prefix))
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:run_city_search, city}, socket) do
+    case Stores.search_by_city(city) do
+      [] ->
+        socket =
+          socket
+          |> put_flash(:info, "No stores matching specified city")
+          |> assign(stores: [])
+          |> assign(loading: false)
+
+        {:noreply, socket}
+
+      stores ->
+        socket =
+          socket
+          |> clear_flash()
+          |> assign(stores: stores)
+          |> assign(loading: false)
+
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:run_zip_search, zip}, socket) do
+    case Stores.search_by_zip(zip) do
+      [] ->
+        socket =
+          socket
+          |> put_flash(:info, "No stores matching specified zip")
+          |> assign(stores: [])
+          |> assign(loading: false)
+
+        {:noreply, socket}
+
+      stores ->
+        socket =
+          socket
+          |> clear_flash()
+          |> assign(stores: stores)
+          |> assign(loading: false)
+
+        {:noreply, socket}
+    end
+  end
+end

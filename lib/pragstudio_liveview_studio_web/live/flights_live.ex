@@ -5,14 +5,17 @@ defmodule PragstudioLiveviewStudioWeb.FlightsLive do
 
   use PragstudioLiveviewStudioWeb, :live_view
 
+  alias PragstudioLiveviewStudio.Airports
   alias PragstudioLiveviewStudio.Flights
 
   @impl true
   def mount(_params, _session, socket) do
     socket =
       socket
+      |> assign(airport: "")
       |> assign(flight_number: "")
       |> assign(flights: [])
+      |> assign(matches: [])
       |> assign(loading: false)
 
     {:ok, socket}
@@ -36,6 +39,27 @@ defmodule PragstudioLiveviewStudioWeb.FlightsLive do
             </button>
 
         </form>
+
+        <form phx-submit="airport-search" phx-change="suggest-airport">
+
+            <input type="text" name="airport"
+            value={@airport} placeholder="Enter airport.."
+            autocomplete="off"
+            readonly={@loading}
+            debounce="1000"
+            list="matches" />
+
+            <button type="submit">
+            <img src="assets/images/search.svg" />
+            </button>
+
+        </form>
+
+        <datalist id="matches">
+        <%= for match <- @matches do %>
+          <option value={match}><%= match %></option>
+        <% end %>
+        </datalist>
 
         <%= if @loading do %>
         <div class="loader">Loading...</div>
@@ -72,6 +96,27 @@ defmodule PragstudioLiveviewStudioWeb.FlightsLive do
   end
 
   @impl true
+  def handle_event("suggest-airport", %{"airport" => prefix}, socket) do
+    socket =
+      socket
+      |> assign(matches: Airports.suggest(prefix))
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("airport-search", %{"airport" => airport}, socket) do
+    send(self(), {:run_airport_search, airport})
+
+    socket =
+      socket
+      |> assign(airports: [])
+      |> assign(loading: true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("flight-search", %{"flight-number" => flight_number}, socket) do
     send(self(), {:run_flight_search, flight_number})
 
@@ -81,6 +126,34 @@ defmodule PragstudioLiveviewStudioWeb.FlightsLive do
       |> assign(loading: true)
 
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:run_airport_search, airport}, socket) do
+    airport |> IO.inspect()
+
+    case Flights.search_by_airport(airport) do
+      [] ->
+        socket =
+          socket
+          |> put_flash(
+            :info,
+            "No matching flights found. Please enter a different airport code."
+          )
+          |> assign(flights: [])
+          |> assign(loading: false)
+
+        {:noreply, socket}
+
+      airports ->
+        socket =
+          socket
+          |> clear_flash()
+          |> assign(flights: airports)
+          |> assign(loading: false)
+
+        {:noreply, socket}
+    end
   end
 
   @impl true
